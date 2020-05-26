@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login as seller</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+        crossorigin="anonymous">
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand navbar-light bg-light">
+    <a class="navbar-brand" href="index.html">STAR Supermarket</a>
+    <div class="navbar-nav">
+        <a class="nav-item nav-link" href="index.html">Ana səhifə</a>
+        <a class="nav-item nav-link active" href="login.html">Daxil ol</a>
+        <a class="nav-item nav-link" href="sale.html">Satış</a>
+    </div>
+  </nav>
+  <!-- /Navigation Bar -->
+
+  <div class="container" style="margin-top: 20px;">
+    <h2>Satıcı hesabına daxil olun</h2>
+    <hr><br>
+    <div class="col-6">
+      <div>
+        <input class="form-control" type="email" id="email" placeholder="Email-i daxil edin">
+        <br>
+        <input class="form-control" type="password" id="password" placeholder="Şifrəni daxil edin">
+        <br>
+        <button class="btn btn-primary" id="login" onclick="postLogin()">Daxil ol</button>
+      </div>
+      <br>
+      <div class="alert alert-success" role="alert"
+        style="display: none; text-align: center;" id="succesLogin">
+        Hesaba daxil olundu. Satış səhifəsinə keçid edin.
+      </div>
+      <div class="alert alert-danger" role="alert"
+        style="display: none; text-align: center;" id="wrongCreds">
+        Yanlış email və ya şifrə daxil etmisiniz.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const axios = require('axios');
+    const fs = require('fs');
+
+    function postLogin() {
+      var email = document.getElementById('email').value;
+      var pass = document.getElementById('password').value;
+
+      axios.post("http://localhost:5003/Auth/Login", {
+        "Email": email,
+        "Password": pass
+      }).then((response) => {
+        document.getElementById('succesLogin').style.display = 'block';
+        document.getElementById('wrongCreds').style.display = 'none';
+        console.log(response.data);
+        // Write data to file
+        fs.writeFile("./usrData", JSON.stringify(response.data), err => {
+          if(err) {
+            return console.log(err);
+          }
+          console.log("User's data was saved!");
+        });
+      })
+      .catch((err) => {
+        document.getElementById('succesLogin').style.display = 'none';
+        document.getElementById('wrongCreds').style.display = 'block';
+        console.log(err);
+      });
+    }
+
+    function readData() {
+      try {
+        const jsonString = fs.readFileSync('./usrData');
+        const user = JSON.parse(jsonString);
+        console.log(user.token)
+      } catch(err) {
+        console.log(err)
+        return
+      }
+    }
+  </script>
+</body>
+</html>

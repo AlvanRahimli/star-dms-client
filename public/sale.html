@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StarDMS Client</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk"
+        crossorigin="anonymous">
+    <style>
+      .price {
+        border-color: rgba(255, 0, 0, 0.8);
+        box-shadow: 0 1px 1px rgba(255, 0, 0, 0.8) inset, 0 0 8px rgba(255, 0, 0, 0.8);
+        outline: 0 none;
+        pointer-events: none;
+      }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar  -->
+    <nav class="navbar navbar-expand navbar-light bg-light">
+        <a class="navbar-brand" href="#">STAR Supermarket</a>
+        <div class="navbar-nav">
+            <a class="nav-item nav-link" href="index.html">Ana səhifə</a>
+            <a class="nav-item nav-link" href="login.html">Daxil ol</a>
+            <a class="nav-item nav-link active" href="sale.html" id="saleLink">Satış (Satıcı: &nbsp </a>
+        </div>
+    </nav>
+    <!-- /Navigation Bar -->
+
+    <hr>
+    <div style="padding: 20px;">
+      <div class="row" id="addProductSection">
+        <div class="col-6">
+
+          <div class="row">
+            <div class="col">
+              <input type="text" class="form-control" placeholder="Barkod" id="barcode">
+            </div>
+            <div class="col">
+              <input type="text" class="form-control" placeholder="Sayı (1 üçün boş buraxın)" id="count">
+            </div>
+          </div>
+
+          <br>
+          <div class="row">
+            <div class="col">
+              <span style="width: 100%;"></span>
+            </div>
+            <div class="col">
+              <input type="text" class="form-control price" readonly placeholder="Qiymət" id="price">
+            </div>
+          </div>
+
+          <br>
+          <div class="row">
+            <div class="col">
+              <input type="text" class="form-control" placeholder="Məhsulun adı"
+                id="productName" readonly>
+            </div>
+            <div class="col">
+              <input type="text" class="form-control" placeholder="İstehsalçı"
+                id="firmName" readonly>
+            </div>
+          </div>
+
+          <br>
+          <div class="row">
+            <div class="col">
+              <button class="btn btn-primary" onclick="postTransaction()" style="width: 100%;">
+                Təsdiq et (Enter)
+              </button>
+            </div>
+          </div>
+
+          <br>
+          <div class="alert alert-success" role="alert"
+            style="display: none; text-align: center;" id="succes">
+            Əməliyyat yerinə yetirildi.
+          </div>
+          <div class="alert alert-danger" role="alert"
+            style="display: none; text-align: center;" id="danger">
+            Səhv baş verdi.
+          </div>
+          <div class="alert alert-danger" role="alert"
+            style="display: none; text-align: center;" id="notfound">
+            Məhsul verilənlər bazasında tapılmadı.
+          </div>
+          <div class="alert alert-danger" role="alert"
+            style="display: none; text-align: center;" id="accountFail">
+            Hesabla bağlı səhv baş verdi. Yenidən
+            <a href="login.html">daxil olun</a>
+          </div>
+        </div>
+        <div class="col-6">
+          <table class="table" id="productsTable">
+            <thead>
+              <tr>
+                <th scope="col">No</th>
+                <th scope="col">Barkod</th>
+                <th scope="col">Ad</th>
+                <th scope="col">Say</th>
+                <th scope="col">Qiymət</th>
+              </tr>
+            </thead>
+            <tbody id="prodTbBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const axios = require('axios');
+      const fs = require('fs');
+
+      var usrData = {};
+      // Read user data from usrData file
+      fs.readFile('usrData', (err, data) => {
+        if (err) {
+          return console.error(err);
+        }
+        try {
+          // Parse usrData
+          usrData = JSON.parse(data.toString());
+        } catch (e) {
+          // On error disable barcode control
+          document.getElementById('danger').style.display = 'block';
+          document.getElementById('barcode').setAttribute('readonly', true);
+          console.error('Fayldan satıcı məlumatlarını oxuyarkən səhv baş verdi.');
+        }
+
+        // Verify seller's token
+        axios.get('http://localhost:5003/Auth/VerifySeller', {
+          headers: {
+              Authorization: usrData.token
+          }
+        }).then((response) => {
+          var saleLink = document.getElementById('saleLink');
+          saleLink.innerText = saleLink.innerText + usrData.credentials.name + ')';
+          console.log("authenticated");
+        }).catch((err) => {
+          document.getElementById('accountFail').style.display = 'block';
+          document.getElementById('barcode').setAttribute('readonly', true);
+          console.error('Fayldan satıcı məlumatlarını oxuyarkən səhv baş verdi.');
+          console.log(err);
+        })
+      });
+
+      var barcodeInput = document.getElementById('barcode');
+      var numberInput = document.getElementById('count');
+      var priceInp = document.getElementById('price');
+      var countInp = document.getElementById('count');
+      var nameInp = document.getElementById('productName');
+      var firmInp = document.getElementById('firmName');
+      var detailsInp = document.getElementById('details');
+      var errorAlert = document.getElementById('notfound');
+      var productsTable = document.getElementById('productsTable');
+
+      var price = 0;
+      var productCount = 1;
+      var reqUrl = 'http://localhost:5003/Products/GetProduct?barcode=';
+      var addedProducts = [];
+
+      barcodeInput.focus();
+      barcodeInput.addEventListener('input', (e) => {
+        if (barcodeInput.value.length == 13) {
+          countInp.setAttribute('readonly', true);
+          // Show product details:
+          axios.get(reqUrl + barcodeInput.value, {
+            headers: {
+                Authorization: usrData.token
+            }
+          }).then((response) => {
+            // Write to controls
+            price = response.data.salePrice;
+            nameInp.value = response.data.name;
+            firmInp.value = response.data.firmName;
+            priceInp.value = countInp.value == '' ? price : countInp.value * price;
+
+            // Add to list
+            var np = {};
+            np.id = response.data.id;
+            np.count = countInp.value == '' ? 1 : parseInt(countInp.value);
+            np.name = nameInp.value;
+            addedProducts.push(np);
+
+            // Add product to table
+            var newProduct = productsTable.getElementsByTagName('tbody')[0].insertRow();
+            newProduct.insertCell().innerHTML = productCount;
+            newProduct.insertCell().innerText = response.data.barcode;
+            newProduct.insertCell().innerText = response.data.name;
+            newProduct.insertCell().innerText = countInp.value == '' ? 1 : countInp.value;
+            newProduct.insertCell().innerHTML = '<strong>' + priceInp.value + '</strong>';
+
+            productCount ++;
+            errorAlert.style.display = 'none';
+            setTimeout(clearControls, 1200);
+          }).catch((err) => {
+            console.log(err);
+            errorAlert.style.display = 'block';
+            setTimeout(clearControls, 3000);
+          })
+        }
+      });
+
+      countInp.addEventListener('input', (e) => {
+        if (countInp.value == '') {
+          priceInp.value = price;
+        } else {
+          priceInp.value = price * countInp.value;
+        }
+      })
+
+      function postTransaction() {
+        console.log(addedProducts);
+
+        // *Incomplete*
+        // Clear added products
+        var oldBody = document.getElementById('prodTbBody');
+        oldBody.innerHTML = "";
+        addedProducts = [];
+        productCount = 1;
+        setTimeout(clearControls, 3000);
+        barcodeInput.focus();
+      }
+
+      function clearControls() {
+        nameInp.value = '';
+        firmInp.value = '';
+        priceInp.value = '';
+        barcodeInput.value = '';
+        numberInput.value = '';
+        price = 0;
+        barcodeInput.focus();
+        numberInput.removeAttribute('readonly');
+        errorAlert.style.display = 'none';
+      }
+    </script>
+</body>
+</html>
