@@ -1,10 +1,10 @@
 {
   "name": "stardms-client",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "./build/main.js",
   "description": "Client app for StarDMS.API",
   "author": {
-    "name":"Alvan Rahimli",
+    "name": "Alvan Rahimli",
     "email": "alvanrahimli@gmail.com",
     "url": "https://www.facebook.com/alvan.rahimli"
   },
@@ -26,10 +26,8 @@
     "watch": "tsc -w",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "start": "yarn build && electron ./build/main.js",
-    "dist": "build",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "publish": "yarn run build && electron-builder"
   },
   "build": {
     "appId": "star-dms-client",
@@ -54,8 +52,17 @@
       ]
     },
     "win": {
-      "target": "squirrel",
-      "icon": "build/icon.ico"
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "files": [
+      "build/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "public/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
     }
   }
 }
