@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login as seller</title>
   <link rel="stylesheet" href="css/bootstrap.min.css">
+  <style>
+    .price {
+      border-color: rgba(255, 0, 0, 0.8);
+      box-shadow: 0 1px 1px rgba(255, 0, 0, 0.8) inset, 0 0 8px rgba(255, 0, 0, 0.8);
+      outline: 0 none;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
   <!-- Navigation Bar -->
@@ -13,7 +21,10 @@
     <div class="navbar-nav">
         <a class="nav-item nav-link" href="index.html">Ana səhifə</a>
         <a class="nav-item nav-link active" href="login.html">Daxil ol</a>
-        <a class="nav-item nav-link" href="sale.html">Satış</a>
+        <a class="nav-item nav-link" style="display: none;" href="sale.html"
+          id="saleLink">
+          Satış
+        </a>
     </div>
   </nav>
   <!-- /Navigation Bar -->
@@ -45,6 +56,32 @@
     const axios = require('axios');
     const fs = require('fs');
 
+    var usrData = {};
+    // Read user data from usrData file
+    fs.readFile('usrData', (err, data) => {
+      if (err) {
+        return console.error(err);
+      }
+      try {
+        // Parse usrData
+        usrData = JSON.parse(data.toString());
+      } catch (e) {
+        return console.error('Fayldan satıcı məlumatlarını oxuyarkən səhv baş verdi.');
+      }
+
+      // Verify seller's token
+      axios.get('http://localhost:5000/Auth/VerifySeller', {
+        headers: {
+            Authorization: usrData.token
+        }
+      }).then((response) => {
+        document.getElementById('saleLink').removeAttribute('style');
+        console.log("authenticated");
+      }).catch((err) => {
+        console.log(err);
+      })
+    });
+
     function postLogin() {
       var email = document.getElementById('email').value;
       var pass = document.getElementById('password').value;
@@ -62,6 +99,7 @@
             return console.log(err);
           }
           console.log("User's data was saved!");
+          document.getElementById('saleLink').removeAttribute('style');
         });
       })
       .catch((err) => {
@@ -69,17 +107,6 @@
         document.getElementById('wrongCreds').style.display = 'block';
         console.log(err);
       });
-    }
-
-    function readData() {
-      try {
-        const jsonString = fs.readFileSync('./usrData');
-        const user = JSON.parse(jsonString);
-        console.log(user.token)
-      } catch(err) {
-        console.log(err)
-        return
-      }
     }
   </script>
 </body>

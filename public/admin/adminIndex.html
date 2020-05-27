@@ -16,11 +16,13 @@
     <button class="w3-bar-item w3-button w3-large bar-item"
       onclick="closeBar()">&times; Bağla</button>
     <a href="adminIndex.html" class="w3-bar-item w3-button bar-item">Ana səhifə</a>
-    <a href="addProduct.html" class="w3-bar-item w3-button bar-item">Əlavə et</a>
-    <a href="editProduct.html" class="w3-bar-item w3-button bar-item">Düzəliş et</a>
-    <a href="deleteProduct.html" class="w3-bar-item w3-button bar-item">Sil</a>
-    <a href="listProducts.html" class="w3-bar-item w3-button bar-item">Bütün məhsullar</a>
-    <a href="transactions.html" class="w3-bar-item w3-button bar-item">Əməliyyatlar</a>
+    <div style="display: none" id="adminNav">
+      <a href="addProduct.html" class="w3-bar-item w3-button bar-item">Əlavə et</a>
+      <a href="editProduct.html" class="w3-bar-item w3-button bar-item">Düzəliş et</a>
+      <a href="deleteProduct.html" class="w3-bar-item w3-button bar-item">Sil</a>
+      <a href="listProducts.html" class="w3-bar-item w3-button bar-item">Bütün məhsullar</a>
+      <a href="transactions.html" class="w3-bar-item w3-button bar-item">Əməliyyatlar</a>
+    </div>
   </div>
   <!-- /Side bar -->
 
@@ -85,6 +87,7 @@
         }
       }).then((response) => {
         console.log("authenticated");
+        document.getElementById('adminNav').removeAttribute('style');
       }).catch((err) => {
         document.getElementById('wrongCreds').style.display = 'block';
         console.error('Fayldan satıcı məlumatlarını oxuyarkən səhv baş verdi.');
@@ -107,6 +110,7 @@
           if(err) {
             return console.log(err);
           }
+          document.getElementById('adminNav').removeAttribute('style');
           console.log("User's data was saved!");
         });
       })
