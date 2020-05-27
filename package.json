@@ -59,7 +59,7 @@
       "build/**/*",
       "node_modules/**/*",
       "package.json",
-      "assets/**/*"
+      "public/**/*"
     ],
     "directories": {
       "buildResources": "assets"
