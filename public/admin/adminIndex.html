@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<title>İdarəetmə paneli</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+  <link rel="stylesheet" href="../css/bootstrap.min.css">
+  <style>
+    .bar-item {
+      font-size: 1.4em;
+    }
+  </style>
+<body>
+  <!-- Side bar -->
+  <div class="w3-sidebar w3-bar-block w3-card w3-animate-left"
+    style="display:none" id="mySidebar">
+    <button class="w3-bar-item w3-button w3-large bar-item"
+      onclick="closeBar()">&times; Bağla</button>
+    <a href="adminIndex.html" class="w3-bar-item w3-button bar-item">Ana səhifə</a>
+    <a href="addProduct.html" class="w3-bar-item w3-button bar-item">Əlavə et</a>
+    <a href="editProduct.html" class="w3-bar-item w3-button bar-item">Düzəliş et</a>
+    <a href="deleteProduct.html" class="w3-bar-item w3-button bar-item">Sil</a>
+    <a href="listProducts.html" class="w3-bar-item w3-button bar-item">Bütün məhsullar</a>
+    <a href="transactions.html" class="w3-bar-item w3-button bar-item">Əməliyyatlar</a>
+  </div>
+  <!-- /Side bar -->
+
+  <div id="main">
+    <div class="w3-teal">
+      <button id="openNav" class="w3-button w3-teal w3-xlarge" onclick="openBar()">
+        &#9776; Ana səhifə
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="w3-container" id="mainContent">
+      <div class="container" style="margin-top: 20px;">
+        <h2>Admin hesabına daxil olun</h2>
+        <hr><br>
+        <div class="col-6">
+          <div>
+            <input class="form-control" type="text" id="name" placeholder="Adı daxil edin">
+            <br>
+            <input class="form-control" type="password" id="password" placeholder="Şifrəni daxil edin">
+            <br>
+            <button class="btn btn-primary" id="login" onclick="postLogin()">Daxil ol</button>
+          </div>
+          <br>
+          <div class="alert alert-success" role="alert"
+            style="display: none; text-align: center;" id="succesLogin">
+            Hesaba daxil olundu.
+          </div>
+          <div class="alert alert-danger" role="alert"
+            style="display: none; text-align: center;" id="wrongCreds">
+            Yanlış email və ya şifrə daxil etmisiniz.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fs = require('fs');
+    const axios = require('axios');
+
+    var usrData = {};
+    // Read user data from usrData file
+    fs.readFile('usrData', (err, data) => {
+      if (err) {
+        return console.error(err);
+      }
+      try {
+        // Parse usrData
+        usrData = JSON.parse(data.toString());
+      } catch (e) {
+        // On error disable barcode control
+        document.getElementById('danger').style.display = 'block';
+        document.getElementById('barcode').setAttribute('readonly', true);
+        console.error('Fayldan admin məlumatlarını oxuyarkən səhv baş verdi.');
+      }
+
+      // Verify seller's token
+      axios.get('http://localhost:5003/Auth/VerifyAdmin', {
+        headers: {
+            Authorization: usrData.token
+        }
+      }).then((response) => {
+        console.log("authenticated");
+      }).catch((err) => {
+        document.getElementById('wrongCreds').style.display = 'block';
+        console.error('Fayldan satıcı məlumatlarını oxuyarkən səhv baş verdi.');
+        console.log(err);
+      })
+    });
+
+    function postLogin() {
+      var postData = {
+        Name: document.getElementById('name').value,
+        Password: document.getElementById('password').value
+      };
+
+      axios.post("http://localhost:5003/Auth/AdminLogin", postData).then((response) => {
+        document.getElementById('succesLogin').style.display = 'block';
+        document.getElementById('wrongCreds').style.display = 'none';
+        console.log(response.data);
+        // Write data to file
+        fs.writeFile("./usrData", JSON.stringify(response.data), err => {
+          if(err) {
+            return console.log(err);
+          }
+          console.log("User's data was saved!");
+        });
+      })
+      .catch((err) => {
+        document.getElementById('succesLogin').style.display = 'none';
+        document.getElementById('wrongCreds').style.display = 'block';
+        console.log(err);
+      });
+    }
+
+    // Side bar actions
+    function openBar() {
+      document.getElementById("main").style.marginLeft = "25%";
+      document.getElementById("mySidebar").style.width = "25%";
+      document.getElementById("mySidebar").style.display = "block";
+      // document.getElementById("openNav").style.display = 'none';
+    }
+    function closeBar() {
+      document.getElementById("main").style.marginLeft = "0%";
+      document.getElementById("mySidebar").style.display = "none";
+      // document.getElementById("openNav").style.display = "inline-block";
+    }
+  </script>
+</body>
+</html>

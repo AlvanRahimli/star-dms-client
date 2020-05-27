@@ -32,7 +32,8 @@ function createWindow() {
               webPreferences: {
                 nodeIntegration: true,
               },
-            })
+            });
+            adminWin.loadFile(path.resolve(__dirname, "../public/admin/adminIndex.html"));
           }
         },
         {
