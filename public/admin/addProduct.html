@@ -126,7 +126,7 @@
       }
 
       // Verify seller's token
-      axios.get('http://localhost:5003/Auth/VerifyAdmin', {
+      axios.get('http://localhost:5000/Auth/VerifyAdmin', {
         headers: {
             Authorization: usrData.token
         }
@@ -141,7 +141,7 @@
     });
 
     function loadFirms() {
-      axios.get('http://localhost:5003/Firms/AllBrief', {
+      axios.get('http://localhost:5000/Firms/AllBrief', {
         headers: {
           Authorization: usrData.token
         }
@@ -177,7 +177,7 @@
         'Authorization': usrData.token
       };
       console.log(newProduct);
-      axios.post('http://localhost:5003/Products/Add', newProduct, {
+      axios.post('http://localhost:5000/Products/Add', newProduct, {
         headers: myHeaders
       }).then((response) => {
         document.getElementById('success').style.display = 'block';

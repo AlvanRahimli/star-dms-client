@@ -79,7 +79,7 @@
       }
 
       // Verify seller's token
-      axios.get('http://localhost:5003/Auth/VerifyAdmin', {
+      axios.get('http://localhost:5000/Auth/VerifyAdmin', {
         headers: {
             Authorization: usrData.token
         }
@@ -98,7 +98,7 @@
         Password: document.getElementById('password').value
       };
 
-      axios.post("http://localhost:5003/Auth/AdminLogin", postData).then((response) => {
+      axios.post("http://localhost:5000/Auth/AdminLogin", postData).then((response) => {
         document.getElementById('succesLogin').style.display = 'block';
         document.getElementById('wrongCreds').style.display = 'none';
         console.log(response.data);

@@ -129,7 +129,7 @@
         }
 
         // Verify seller's token
-        axios.get('http://localhost:5003/Auth/VerifySeller', {
+        axios.get('http://localhost:5000/Auth/VerifySeller', {
           headers: {
               Authorization: usrData.token
           }
@@ -157,7 +157,7 @@
 
       var price = 0;
       var productCount = 1;
-      var reqUrl = 'http://localhost:5003/Products/GetProduct?barcode=';
+      var reqUrl = 'http://localhost:5000/Products/GetProduct?barcode=';
       var addedProducts = [];
 
       barcodeInput.focus();
