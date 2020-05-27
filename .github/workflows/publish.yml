@@ -19,12 +19,6 @@ jobs:
         with:
           node-version: 10
 
-      - name: Install packages
-        run: yarn
-
-      - name: Build typescript
-        run: yarn run build
-
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1
         with:

@@ -1,6 +1,6 @@
 {
   "name": "stardms-client",
-  "version": "0.1.3",
+  "version": "0.1.1",
   "main": "./build/main.js",
   "description": "Client app for StarDMS.API",
   "author": {
