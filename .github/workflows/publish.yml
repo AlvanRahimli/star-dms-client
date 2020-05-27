@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: 10
 
+      - name: Install packages
+        run: yarn
+
       - name: Build typescript
         run: yarn run build
 
