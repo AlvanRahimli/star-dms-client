@@ -104,6 +104,7 @@
             <tbody id="prodTbBody">
             </tbody>
           </table>
+          <h3 id="sum"></h3>
         </div>
       </div>
     </div>
@@ -111,10 +112,14 @@
     <script>
       const axios = require('axios');
       const fs = require('fs');
+      const getConfigPath = require('appdata-path');
+      const path = require('path');
+
+      const authPath = path.join(getConfigPath(), 'stardms-client/auth.json');
 
       var usrData = {};
       // Read user data from usrData file
-      fs.readFile('usrData', (err, data) => {
+      fs.readFile(authPath, (err, data) => {
         if (err) {
           return console.error(err);
         }
@@ -129,7 +134,7 @@
         }
 
         // Verify seller's token
-        axios.get('http://localhost:5000/Auth/VerifySeller', {
+        axios.get(process.env.SERVER_ADDRESS + '/Auth/VerifySeller', {
           headers: {
               Authorization: usrData.token
           }
@@ -154,10 +159,12 @@
       var detailsInp = document.getElementById('details');
       var errorAlert = document.getElementById('notfound');
       var productsTable = document.getElementById('productsTable');
+      var sumH1 = document.getElementById('sum');
 
       var price = 0;
       var productCount = 1;
-      var reqUrl = 'http://localhost:5000/Products/GetProduct?barcode=';
+      var sum = 0;
+      var reqUrl = process.env.SERVER_ADDRESS + '/Products/GetProduct?barcode=';
       var addedProducts = [];
 
       barcodeInput.focus();
@@ -174,7 +181,8 @@
             price = response.data.salePrice;
             nameInp.value = response.data.name;
             firmInp.value = response.data.firmName;
-            priceInp.value = countInp.value == '' ? price : countInp.value * price;
+            var finalPrice = countInp.value == '' ? price : parseInt(countInp.value) * price;
+            priceInp.value = finalPrice/100;
 
             // Add to list
             var np = {};
@@ -191,7 +199,9 @@
             newProduct.insertCell().innerText = countInp.value == '' ? 1 : countInp.value;
             newProduct.insertCell().innerHTML = '<strong>' + priceInp.value + '</strong>';
 
+            sum += finalPrice;
             productCount ++;
+            sumH1.innerText = 'Cəmi: ' + sum/100 + ' AZN';
             errorAlert.style.display = 'none';
             setTimeout(clearControls, 1200);
           }).catch((err) => {
@@ -219,6 +229,8 @@
         oldBody.innerHTML = "";
         addedProducts = [];
         productCount = 1;
+        sumH1.innerText = '';
+        sum = 0;
         setTimeout(clearControls, 3000);
         barcodeInput.focus();
       }

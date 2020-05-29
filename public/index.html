@@ -17,6 +17,9 @@
               href="sale.html" id="saleLink">
               Satış
             </a>
+            <a class="nav-item nav-link btn btn-link" onclick="logout()" id="logoutBtn">
+              Hesabdan çıxın
+            </a>
         </div>
     </nav>
     <!-- Navigation Bar -->
@@ -31,10 +34,27 @@
     <script type="text/javascript">
       const axios = require('axios');
       const fs = require('fs');
+      const getConfigPath = require('appdata-path');
+      const path = require('path');
+
+      const authPath = path.join(getConfigPath(), 'stardms-client/auth.json');
+      const configPath = path.join(getConfigPath(), "stardms-client/config.json");
+
+      // Read database file and set env variable
+      if (fs.existsSync(configPath)) {
+        fs.readFile(configPath, (err, data) => {
+          var config = JSON.parse(data.toString());
+          process.env.SERVER_ADDRESS = config.serverAddress;
+        })
+      } else {
+        fs.writeFile(configPath, JSON.stringify({ serverAddress: "http://localhost:5000"}), (err) => {
+
+        });
+      }
 
       var usrData = {};
       // Read user data from usrData file
-      fs.readFile('usrData', (err, data) => {
+      fs.readFile(authPath, (err, data) => {
         if (err) {
           return console.error(err);
         }
@@ -46,7 +66,7 @@
         }
 
         // Verify seller's token
-        axios.get('http://localhost:5000/Auth/VerifySeller', {
+        axios.get(process.env.SERVER_ADDRESS + '/Auth/VerifySeller', {
           headers: {
               Authorization: usrData.token
           }
@@ -57,6 +77,16 @@
           console.log(err);
         })
       });
+
+      function logout() {
+        fs.writeFile(authPath, "LOGGED OUT", err => {
+          if(err) {
+            return console.log(err);
+          }
+          console.log("logged out");
+          document.getElementById('saleLink').setAttribute('style', 'display: none;');
+        });
+      }
     </script>
 </body>
 </html>

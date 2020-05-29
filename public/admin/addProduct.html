@@ -37,7 +37,7 @@
       <div style="padding: 20px;">
         <div class="row" id="addProductSection">
           <div class="col-7">
-
+            <h2>İstehsalçı əlavə edin</h2>
             <div class="row">
               <div class="col">
                 <input type="number" class="form-control" placeholder="Barkod (13 simvol)" id="barcode">
@@ -53,8 +53,19 @@
                 <input type="number" class="form-control price" placeholder="Sayı" id="count">
               </div>
               <div class="col">
-                <select class="form-control" id="firms">
-                </select>
+                <div class="row">
+                  <div class="col-10">
+                    <select class="form-control" id="firms">
+                      <option>Firma seçin</option>
+                    </select>
+                  </div>
+                  <div class="col-2" style="padding-left: 0; margin-left: 0;">
+                    <button name="btnAddFirm" class="btn btn-secondary"
+                      onclick="showAddFirmControls()" id="showControls">
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -89,12 +100,44 @@
               style="display: none; text-align: center;" id="success">
               Əməliyyat yerinə yetirildi.
             </div>
-            <div class="alert alert-info" role="alert"
-              style="display: none; text-align: center;" id="info">
-              N/A
-            </div>
             <div class="alert alert-danger" role="alert"
               style="display: none; text-align: center;" id="danger">
+              Səhv baş verdi.
+            </div>
+          </div>
+          <div class="col-5" id="firmAddSection" style="display: none;">
+            <h2>İstehsalçı əlavə edin</h2>
+            <div class="row">
+              <div class="col">
+                <input type="text" placeholder="Adı" id="firmAddName" class="form-control">
+              </div>
+              <div class="col">
+                <input type="text" placeholder="Əlaqə" id="firmAddContact" class="form-control">
+              </div>
+            </div>
+            <br>
+
+            <div class="row">
+              <div class="col">
+                <input type="text" class="form-control" placeholder="Ətraflı məlumat" id="firmAddDetails">
+              </div>
+            </div>
+
+            <br>
+            <div class="row">
+              <div class="col">
+                <button type="button" id="addFirmBtn" class="btn btn-primary" onclick="addFirm()">
+                  &#x2b; Əlavə et
+                </button>
+              </div>
+            </div>
+            <br><br>
+            <div class="alert alert-success" role="alert"
+              style="display: none; text-align: center;" id="successFirm">
+              Əməliyyat yerinə yetirildi.
+            </div>
+            <div class="alert alert-danger" role="alert"
+              style="display: none; text-align: center;" id="dangerFirm">
               Səhv baş verdi.
             </div>
           </div>
@@ -108,10 +151,14 @@
     const fs = require('fs');
     const axios = require('axios');
     const moment = require('moment');
+    const getConfigPath = require('appdata-path');
+    const path = require('path');
+
+    const authPath = path.join(getConfigPath(), 'stardms-client/auth.json');
 
     // Read admin data from usrData file
     var usrData = {};
-    fs.readFile('usrData', (err, data) => {
+    fs.readFile(authPath, (err, data) => {
       if (err) {
         return console.error(err);
       }
@@ -126,7 +173,7 @@
       }
 
       // Verify seller's token
-      axios.get('http://localhost:5000/Auth/VerifyAdmin', {
+      axios.get(process.env.SERVER_ADDRESS + '/Auth/VerifyAdmin', {
         headers: {
             Authorization: usrData.token
         }
@@ -141,12 +188,13 @@
     });
 
     function loadFirms() {
-      axios.get('http://localhost:5000/Firms/AllBrief', {
+      axios.get(process.env.SERVER_ADDRESS + '/Firms/AllBrief', {
         headers: {
           Authorization: usrData.token
         }
       }).then((response) => {
         console.log(response);
+        // Add to select control
         var firmsSelect = document.getElementById('firms');
         response.data.forEach((item, i) => {
           var firmOption = document.createElement('option');
@@ -157,7 +205,42 @@
       }).catch((err) => {
         console.log(err);
       });
+    }
 
+    function showAddFirmControls() {
+      var controls = document.getElementById('firmAddSection');
+      console.log(controls.getAttribute('style'));
+      if (controls.getAttribute('style') === null) {
+        controls.setAttribute('style', 'display: none;');
+      } else {
+        controls.removeAttribute('style');
+      }
+    }
+
+    function addFirm() {
+      var newFirm = {
+        name: document.getElementById('firmAddName').value,
+        details: document.getElementById('firmAddDetails').value,
+        contact: document.getElementById('firmAddContact').value
+      };
+
+      axios.post(process.env.SERVER_ADDRESS + '/Firms/Add', newFirm, {
+        headers: {
+          Authorization: usrData.token
+        }
+      }).then((response) => {
+        var firmsSelect = document.getElementById('firms');
+        var firmOption = document.createElement('option');
+        firmOption.innerText = response.data.name;
+        firmOption.setAttribute('value', response.data.id);
+        firmsSelect.add(firmOption);
+        document.getElementById('successFirm').style.display = 'block';
+        document.getElementById('dangerFirm').style.display = 'none';
+      }).catch((err) => {
+        console.error(err);
+        document.getElementById('successFirm').style.display = 'none';
+        document.getElementById('dangerFirm').style.display = 'block';
+      })
     }
 
     function addProduct() {
@@ -166,29 +249,43 @@
         "name": document.getElementById('name').value,
         "count": parseInt(document.getElementById('count').value),
         "firmId": document.getElementById('firms').value,
-        "salePrice": parseFloat(document.getElementById('sPrice').value),
-        "purchasePrice": parseFloat(document.getElementById('pPrice').value),
+        "salePrice": parseFloat(document.getElementById('sPrice').value)*100,
+        "purchasePrice": parseFloat(document.getElementById('pPrice').value)*100,
         "details": document.getElementById('details').value,
         "entryDate": moment().format()
       }
+
       // POST to server
       const myHeaders = {
         'Content-Type': "application/json",
         'Authorization': usrData.token
       };
       console.log(newProduct);
-      axios.post('http://localhost:5000/Products/Add', newProduct, {
+      axios.post(process.env.SERVER_ADDRESS + '/Products/Add', newProduct, {
         headers: myHeaders
       }).then((response) => {
         document.getElementById('success').style.display = 'block';
         document.getElementById('danger').style.display = 'none';
-        document.getElementById('info').style.display = 'block';
-        document.getElementById('info').innerText = response.message;
         console.log(response);
+        setTimeout(clearControls, 4000);
       }).catch((err) => {
         document.getElementById('danger').style.display = 'block';
         console.log(err);
       });
+    }
+
+    function clearControls() {
+      document.getElementById('barcode').value = '';
+      document.getElementById('name').value = '';
+      document.getElementById('count').value = '';
+      document.getElementById('firms').value = '';
+      document.getElementById('details').value = '';
+      document.getElementById('pPrice').value = '';
+      document.getElementById('sPrice').value = '';
+      document.getElementById('firmAddDetails').value = '';
+      document.getElementById('firmAddName').value = '';
+      document.getElementById('firmAddContact').value = '';
+      document.getElementById('firms').innerHTML = '<option>Firma seçin</option>';
     }
 
     function openBar() {

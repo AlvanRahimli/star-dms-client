@@ -1,8 +1,9 @@
 import { app, BrowserWindow, net, Menu } from "electron";
 import debug from "electron-debug";
 import path from "path";
-import axios from "axios";
 import fs from "fs";
+import getConfigPath from "appdata-path";
+const configPath = path.join(getConfigPath(), "stardms-client/config.json");
 
 debug({
   showDevTools: false,
@@ -18,7 +19,6 @@ function createWindow() {
       nodeIntegration: true
     }
   });
-
   const menuTemplate = [
     {
       label: "Əməliyyatlar",
@@ -47,17 +47,14 @@ function createWindow() {
       ]
     }
   ]
-
   const menu = Menu.buildFromTemplate(menuTemplate);
   Menu.setApplicationMenu(menu);
 
   win.loadFile(path.resolve(__dirname, "../public/index.html"));
 }
 
-app.whenReady().then(createWindow);
-
 app.on("ready", () => {
-
+  createWindow();
 });
 
 app.on("window-all-closed", () => {
@@ -71,7 +68,3 @@ app.on("activate", () => {
     createWindow();
   }
 });
-
-function isLoggedIn() {
-
-}

@@ -63,10 +63,14 @@
   <script>
     const fs = require('fs');
     const axios = require('axios');
+    const getConfigPath = require('appdata-path');
+    const path = require('path');
+
+    const authPath = path.join(getConfigPath(), 'stardms-client/auth.json');
 
     var usrData = {};
     // Read user data from usrData file
-    fs.readFile('usrData', (err, data) => {
+    fs.readFile(authPath, (err, data) => {
       if (err) {
         return console.error(err);
       }
@@ -80,8 +84,8 @@
         console.error('Fayldan admin məlumatlarını oxuyarkən səhv baş verdi.');
       }
 
-      // Verify seller's token
-      axios.get('http://localhost:5000/Auth/VerifyAdmin', {
+      // Verify admin's token
+      axios.get(process.env.SERVER_ADDRESS + '/Auth/VerifyAdmin', {
         headers: {
             Authorization: usrData.token
         }
@@ -106,7 +110,7 @@
         document.getElementById('wrongCreds').style.display = 'none';
         console.log(response.data);
         // Write data to file
-        fs.writeFile("./usrData", JSON.stringify(response.data), err => {
+        fs.writeFile(authPath, JSON.stringify(response.data), err => {
           if(err) {
             return console.log(err);
           }
